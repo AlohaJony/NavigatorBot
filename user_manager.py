@@ -3,6 +3,10 @@ from psycopg2 import pool
 from datetime import date
 from contextlib import contextmanager
 from config import DATABASE_URL
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.info(f"DATABASE_URL raw value: {repr(DATABASE_URL)}")
 
 connection_pool = psycopg2.pool.SimpleConnectionPool(1, 20, dsn=DATABASE_URL)
 

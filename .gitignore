@@ -1,10 +1,10 @@
 .env
-__pycache__/
+__pycache__
 *.pyc
 *.pyo
 *.pyd
-*.db
+.Python
+venv
+env
 *.log
-temp/
-venv/
-cookies.txt
+marker.txt

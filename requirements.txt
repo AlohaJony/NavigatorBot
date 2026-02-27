@@ -1,5 +1,3 @@
 requests
 psycopg2-binary
 python-dotenv
-pillow
-pysubs2

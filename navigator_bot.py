@@ -15,7 +15,6 @@ bot = MaxBotClient(NAVIGATOR_TOKEN)
 BOT_ID = None
 
 def main_menu_keyboard():
-    """Клавиатура главного меню."""
     return {
         "type": "inline_keyboard",
         "payload": {
@@ -43,11 +42,9 @@ def handle_update(update):
             return
 
         sender = msg.get('sender', {})
-        # Игнорируем свои сообщения
         if sender.get('is_bot') and sender.get('user_id') == BOT_ID:
             return
 
-        # В личных сообщениях получатель — user_id
         user_id = sender.get('user_id')
         if not user_id:
             logger.error("No user_id in sender")
@@ -56,10 +53,8 @@ def handle_update(update):
         username = sender.get('username')
         first_name = sender.get('first_name')
 
-        # Регистрируем пользователя в БД
         get_or_create_user(user_id, username, first_name)
 
-        # Текст сообщения
         text = msg.get('body', {}).get('text', '').strip()
         if text == '/start':
             balance = get_balance(user_id)
@@ -78,7 +73,6 @@ def handle_update(update):
             logger.error("No 'callback' field in update")
             return
 
-        # Получаем user_id из callback
         user_info = callback.get('user')
         if not user_info:
             logger.error("No user in callback")
@@ -95,7 +89,6 @@ def handle_update(update):
             balance = get_balance(user_id)
             bot.send_message(user_id=user_id, text=f"💰 Ваш баланс: {balance} токенов.")
         elif payload == 'topup':
-            # Тестовое пополнение на 100 токенов
             add_tokens(user_id, 100, "Тестовое пополнение")
             bot.send_message(user_id=user_id, text="✅ Тестовое пополнение на 100 токенов выполнено!")
         else:

@@ -15,6 +15,7 @@ bot = MaxBotClient(NAVIGATOR_TOKEN)
 BOT_ID = None
 
 def main_menu_keyboard():
+    """Клавиатура главного меню."""
     return {
         "type": "inline_keyboard",
         "payload": {
@@ -33,21 +34,33 @@ def main_menu_keyboard():
 def handle_update(update):
     global BOT_ID
     update_type = update.get('update_type')
-    logger.info(f"Update: {update_type}")
+    logger.info(f"Update type: {update_type}")
 
     if update_type == 'message_created':
-        msg = update['message']
-        if msg['sender'].get('is_bot') and msg['sender'].get('user_id') == BOT_ID:
+        msg = update.get('message')
+        if not msg:
+            logger.error("No 'message' field in update")
             return
-        chat_id = msg['recipient'].get('chat_id') or msg['recipient'].get('user_id')
-        text = msg['body'].get('text', '').strip()
-        user_info = msg['sender']
-        user_id = user_info['user_id']
-        username = user_info.get('username')
-        first_name = user_info.get('first_name')
 
+        sender = msg.get('sender', {})
+        # Игнорируем свои сообщения
+        if sender.get('is_bot') and sender.get('user_id') == BOT_ID:
+            return
+
+        # В личных сообщениях получатель — user_id
+        user_id = sender.get('user_id')
+        if not user_id:
+            logger.error("No user_id in sender")
+            return
+
+        username = sender.get('username')
+        first_name = sender.get('first_name')
+
+        # Регистрируем пользователя в БД
         get_or_create_user(user_id, username, first_name)
 
+        # Текст сообщения
+        text = msg.get('body', {}).get('text', '').strip()
         if text == '/start':
             balance = get_balance(user_id)
             welcome = (
@@ -55,31 +68,51 @@ def handle_update(update):
                 f"Ваш баланс: {balance} токенов.\n\n"
                 f"Выберите нужного бота ниже:"
             )
-            bot.send_message(chat_id, welcome, attachments=[main_menu_keyboard()])
+            bot.send_message(user_id=user_id, text=welcome, attachments=[main_menu_keyboard()])
         else:
-            bot.send_message(chat_id, "Используйте кнопки меню или /start")
+            bot.send_message(user_id=user_id, text="Используйте кнопки меню или /start")
 
     elif update_type == 'message_callback':
-        callback = update['callback']
-        chat_id = callback['message']['recipient']['chat_id']
-        user_id = callback['user']['user_id']
-        payload = callback['payload']
+        callback = update.get('callback')
+        if not callback:
+            logger.error("No 'callback' field in update")
+            return
+
+        # Получаем user_id из callback
+        user_info = callback.get('user')
+        if not user_info:
+            logger.error("No user in callback")
+            return
+        user_id = user_info.get('user_id')
+        if not user_id:
+            logger.error("No user_id in callback")
+            return
+
+        payload = callback.get('payload')
+        logger.info(f"Callback payload: {payload}")
 
         if payload == 'balance':
             balance = get_balance(user_id)
-            bot.send_message(chat_id, f"💰 Ваш баланс: {balance} токенов.")
+            bot.send_message(user_id=user_id, text=f"💰 Ваш баланс: {balance} токенов.")
         elif payload == 'topup':
+            # Тестовое пополнение на 100 токенов
             add_tokens(user_id, 100, "Тестовое пополнение")
-            bot.send_message(chat_id, "✅ Тестовое пополнение на 100 токенов выполнено!")
+            bot.send_message(user_id=user_id, text="✅ Тестовое пополнение на 100 токенов выполнено!")
         else:
-            bot.send_message(chat_id, "Неизвестная команда.")
+            bot.send_message(user_id=user_id, text="Неизвестная команда.")
+    else:
+        logger.warning(f"Unknown update type: {update_type}")
 
 def main():
     global BOT_ID
     logger.info("Starting Navigator Bot...")
-    me = bot.get_me()
-    BOT_ID = me['user_id']
-    logger.info(f"Bot ID: {BOT_ID}, username: @{me.get('username')}")
+    try:
+        me = bot.get_me()
+        BOT_ID = me['user_id']
+        logger.info(f"Bot ID: {BOT_ID}, username: @{me.get('username')}")
+    except Exception as e:
+        logger.error(f"Failed to get bot info: {e}")
+        return
 
     marker = None
     while True:
@@ -90,7 +123,10 @@ def main():
             if new_marker is not None:
                 marker = new_marker
             for upd in updates:
-                handle_update(upd)
+                try:
+                    handle_update(upd)
+                except Exception as e:
+                    logger.error(f"Error handling update: {e}", exc_info=True)
         except Exception as e:
             logger.error(f"Polling error: {e}")
             time.sleep(5)

@@ -71,13 +71,14 @@ def main_menu_keyboard():
                 # Третий ряд
                 #[
                 #    {"type": "link", "text": "🎨 Генерация (в разработке)", "url": IMAGE_BOT_LINK},
-                #    {"type": "callback", "text": "💎 Подписки", "payload": "subscriptions"}
+                #    
                 #],
                 # Нижняя строка на всю ширину (две кнопки рядом)
-                #[
-                #    {"type": "callback", "text": "💰 Мой баланс", "payload": "balance"},
-                #    {"type": "callback", "text": "💳 Пополнить", "payload": "topup_menu"}
-                #]
+                [
+                    {"type": "callback", "text": "💎 Подписки", "payload": "subscriptions"}
+                    {"type": "callback", "text": "💰 Мой баланс", "payload": "balance"},
+                    {"type": "callback", "text": "💳 Пополнить", "payload": "topup_menu"}
+                ]
             ]
         }
     }

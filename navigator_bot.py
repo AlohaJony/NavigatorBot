@@ -75,7 +75,7 @@ def main_menu_keyboard():
                 #],
                 # Нижняя строка на всю ширину (две кнопки рядом)
                 [
-                    {"type": "callback", "text": "💎 Подписки", "payload": "subscriptions"}
+                    {"type": "callback", "text": "💎 Подписки", "payload": "subscriptions"},
                     {"type": "callback", "text": "💰 Мой баланс", "payload": "balance"},
                     {"type": "callback", "text": "💳 Пополнить", "payload": "topup_menu"}
                 ]

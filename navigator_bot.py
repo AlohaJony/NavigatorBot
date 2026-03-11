@@ -140,12 +140,12 @@ def handle_update(update):
                 f"Выберите нужного бота ниже:"
             )
             # Прикрепляем картинку
-            image_attachment = {
-                "type": "image",
-                "payload": {
-                    "url": "https://i.ibb.co/your-image.jpg"
-                }
-            }
+            #image_attachment = {
+            #    "type": "image",
+            #    "payload": {
+            #        "url": "https://i.ibb.co/your-image.jpg"
+            #    }
+            #}
             bot.send_message(user_id=user_id, text=welcome, attachments=[main_menu_keyboard()])
         else:
             bot.send_message(user_id=user_id, text="Используйте кнопки меню или /start")

@@ -67,11 +67,11 @@ def main_menu_keyboard():
                 [{"type": "link", "text": "🗣 Озвучка (в разработке)", "url": TTS_BOT_LINK}],
                 [{"type": "link", "text": "🎨 Генерация (в разработке)", "url": IMAGE_BOT_LINK}],
                 [
-                    {"type": "callback", "text": "💰 Мой баланс", "payload": "balance"},
-                    {"type": "callback", "text": "💎 Подписки", "payload": "subscriptions"}
+                 {"type": "callback", "text": "💰 Мой баланс", "payload": "balance"},
+                 {"type": "callback", "text": "💎 Подписки", "payload": "subscriptions"}
                 ],
                 [
-                    {"type": "link", "text": "🆘 Техподдержка", "url": SUPPORT_LINK}
+                 {"type": "link", "text": "🆘 Техподдержка", "url": SUPPORT_LINK}
                 ]
             ]
         }

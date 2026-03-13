@@ -63,16 +63,16 @@ def main_menu_keyboard():
             "buttons": [
                 [{"type": "link", "text": "🎬 Скачать видео", "url": DOWNLOADER_BOT_LINK}],
                 [{"type": "link", "text": "📄 Конвертер (⚡)", "url": PDF_BOT_LINK}],
-                [{"type": "link", "text": "🎵 Аудио из видео (в разработке)", "url": AUDIO_BOT_LINK}],
-                [{"type": "link", "text": "🗣 Озвучка (в разработке)", "url": TTS_BOT_LINK}],
-                [{"type": "link", "text": "🎨 Генерация (в разработке)", "url": IMAGE_BOT_LINK}],
+                #[{"type": "link", "text": "🎵 Аудио из видео (в разработке)", "url": AUDIO_BOT_LINK}],
+                #[{"type": "link", "text": "🗣 Озвучка (в разработке)", "url": TTS_BOT_LINK}],
+                #[{"type": "link", "text": "🎨 Генерация (в разработке)", "url": IMAGE_BOT_LINK}],
                 [
-                 {"type": "callback", "text": "💰 Мой баланс", "payload": "balance"},
-                 {"type": "callback", "text": "💎 Подписки", "payload": "subscriptions"}
+                    {"type": "callback", "text": "💰 Мой баланс", "payload": "balance"},
+                    {"type": "callback", "text": "💎 Подписки", "payload": "subscriptions"}
                 ],
-                [
-                 {"type": "link", "text": "🆘 Техподдержка", "url": SUPPORT_LINK}
-                ]
+                #[
+                #    {"type": "link", "text": "🆘 Техподдержка", "url": SUPPORT_LINK}
+                #]
             ]
         }
     }
@@ -91,10 +91,10 @@ def subscriptions_keyboard():
             ]
         }
     }
-
+"""
 def topup_keyboard():
     """
-    Клавиатура с вариантами пополнения (пакеты токенов в стиле СССР)
+    #Клавиатура с вариантами пополнения (пакеты токенов в стиле СССР)
     """
     return {
         "type": "inline_keyboard",
@@ -115,7 +115,7 @@ def topup_keyboard():
             ]
         }
     }
-
+"""
 def handle_update(update):
     global BOT_ID
     update_type = update.get('update_type')

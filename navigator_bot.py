@@ -93,9 +93,6 @@ def subscriptions_keyboard():
     }
 """
 def topup_keyboard():
-    """
-    #Клавиатура с вариантами пополнения (пакеты токенов в стиле СССР)
-    """
     return {
         "type": "inline_keyboard",
         "payload": {

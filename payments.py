@@ -42,31 +42,31 @@ class YooKassaClient:
         }
 
     def handle_notification(self, request_json: dict) -> bool:
-    try:
-        notification = WebhookNotification(request_json)
-        if notification.event == 'payment.succeeded':
-            payment = notification.object
-            metadata = payment.metadata
-            user_id = metadata.get('user_id')
-            amount = metadata.get('amount')
-            if not user_id or not amount:
-                return False
+        try:
+            notification = WebhookNotification(request_json)
+            if notification.event == 'payment.succeeded':
+                payment = notification.object
+                metadata = payment.metadata
+                user_id = metadata.get('user_id')
+                amount = metadata.get('amount')
+                if not user_id or not amount:
+                    return False
 
-            if metadata.get('type') == 'subscription':
-                tokens = int(metadata.get('tokens', 0))
-                from datetime import datetime, timedelta
-                # Начисляем токены
-                add_tokens(int(user_id), tokens, f"Подписка {metadata.get('sub_key')}")
-                # Устанавливаем дату окончания подписки
-                from user_manager import update_subscription_end
-                subscription_end = datetime.now() + timedelta(days=30)
-                update_subscription_end(int(user_id), subscription_end)
-                logger.info(f"Subscription activated for user {user_id} until {subscription_end}")
-            else:
-                # Обычное пополнение (если осталось)
-                add_tokens(int(user_id), int(amount), f"Оплата ЮKassa (платёж {payment.id})")
-            return True
-        return False
-    except Exception as e:
-        logger.error(f"Notification error: {e}")
-        return False
+                if metadata.get('type') == 'subscription':
+                    tokens = int(metadata.get('tokens', 0))
+                    from datetime import datetime, timedelta
+                    # Начисляем токены
+                    add_tokens(int(user_id), tokens, f"Подписка {metadata.get('sub_key')}")
+                    # Устанавливаем дату окончания подписки
+                    from user_manager import update_subscription_end
+                    subscription_end = datetime.now() + timedelta(days=30)
+                    update_subscription_end(int(user_id), subscription_end)
+                    logger.info(f"Subscription activated for user {user_id} until {subscription_end}")
+                else:
+                    # Обычное пополнение (если осталось)
+                    add_tokens(int(user_id), int(amount), f"Оплата ЮKassa (платёж {payment.id})")
+                return True
+            return False
+        except Exception as e:
+            logger.error(f"Notification error: {e}")
+            return False

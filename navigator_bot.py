@@ -4,7 +4,7 @@ import threading
 import os
 import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from config import NAVIGATOR_TOKEN, DOWNLOADER_BOT_LINK, PDF_BOT_LINK, AUDIO_BOT_LINK, TTS_BOT_LINK, IMAGE_BOT_LINK, YOOKASSA_SHOP_ID, YOOKASSA_SECRET_KEY, YOOKASSA_RETURN_URL, WEBHOOK_BASE
+from config import NAVIGATOR_TOKEN, DOWNLOADER_BOT_LINK, PDF_BOT_LINK, AUDIO_BOT_LINK, TTS_BOT_LINK, IMAGE_BOT_LINK, SUPPORT_LINK, YOOKASSA_SHOP_ID, YOOKASSA_SECRET_KEY, YOOKASSA_RETURN_URL, WEBHOOK_BASE
 from max_client import MaxBotClient
 from user_manager import get_or_create_user, get_balance, add_tokens
 from payments import YooKassaClient

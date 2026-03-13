@@ -6,7 +6,7 @@ load_dotenv()
 NAVIGATOR_TOKEN = os.getenv('NAVIGATOR_TOKEN')
 MAX_API_BASE = "https://platform-api.max.ru"
 DATABASE_URL = os.getenv('DATABASE_URL')
-SUPPORT_LINK = os.getenv('SUPPORT_LINK', 'https://max.ru/support')
+SUPPORT_LINK = os.getenv('SUPPORT_LINK')
 # Ссылки на других ботов
 DOWNLOADER_BOT_LINK = os.getenv('DOWNLOADER_BOT_LINK')
 PDF_BOT_LINK = os.getenv('PDF_BOT_LINK')

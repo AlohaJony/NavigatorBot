@@ -38,6 +38,14 @@ def get_or_create_user(user_id, username=None, first_name=None):
             )
             return cur.fetchone()
 
+def update_subscription_end(user_id, end_date):
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE users SET subscription_end = %s WHERE user_id = %s",
+                (end_date, user_id)
+            )
+
 def get_balance(user_id):
     with get_connection() as conn:
         with conn.cursor() as cur:

@@ -12,6 +12,14 @@ from payments import YooKassaClient
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+SUBSCRIPTIONS = {
+    "sub_base": {"tokens": 30, "price": 99, "name": "Колхозник"},
+    "sub_start": {"tokens": 100, "price": 199, "name": "Ударник"},
+    "sub_pro": {"tokens": 350, "price": 449, "name": "Стахановец"},
+    "sub_premium": {"tokens": 700, "price": 849, "name": "Партийный"},
+    "sub_ultra": {"tokens": 1000, "price": 1099, "name": "Генсек"},
+}
+
 if not NAVIGATOR_TOKEN:
     raise ValueError("No NAVIGATOR_TOKEN in .env")
 
@@ -49,36 +57,37 @@ webhook_thread = threading.Thread(target=run_webhook_server, daemon=True)
 webhook_thread.start()
 
 def main_menu_keyboard():
-    """
-    Создаёт клавиатуру с двумя колонками:
-    - Первые пять кнопок: ссылки на ботов (с пометкой в разработке для неготовых)
-    - Отдельная строка: кнопки "Мой баланс" и "Пополнить" на всю ширину
-    """
     return {
         "type": "inline_keyboard",
         "payload": {
             "buttons": [
-                # Первый ряд: два бота
+                [{"type": "link", "text": "🎬 Скачать видео", "url": DOWNLOADER_BOT_LINK}],
+                [{"type": "link", "text": "📄 Конвертер (⚡)", "url": PDF_BOT_LINK}],
+                [{"type": "link", "text": "🎵 Аудио из видео (в разработке)", "url": AUDIO_BOT_LINK}],
+                [{"type": "link", "text": "🗣 Озвучка (в разработке)", "url": TTS_BOT_LINK}],
+                [{"type": "link", "text": "🎨 Генерация (в разработке)", "url": IMAGE_BOT_LINK}],
                 [
-                    {"type": "link", "text": "🎬 Скачать видео", "url": DOWNLOADER_BOT_LINK},
-                    {"type": "link", "text": "📄 Конвертер (⚡)", "url": PDF_BOT_LINK}
-                ],
-                # Второй ряд
-                #[
-                #    {"type": "link", "text": "🎵 Аудио из видео (в разработке)", "url": AUDIO_BOT_LINK},
-                #    {"type": "link", "text": "🗣 Озвучка (в разработке)", "url": TTS_BOT_LINK}
-                #],
-                # Третий ряд
-                #[
-                #    {"type": "link", "text": "🎨 Генерация (в разработке)", "url": IMAGE_BOT_LINK},
-                #    
-                #],
-                # Нижняя строка на всю ширину (две кнопки рядом)
-                [
-                    {"type": "callback", "text": "💎 Подписки", "payload": "subscriptions"},
                     {"type": "callback", "text": "💰 Мой баланс", "payload": "balance"},
-                    {"type": "callback", "text": "💳 Пополнить", "payload": "topup_menu"}
+                    {"type": "callback", "text": "💎 Подписки", "payload": "subscriptions"}
+                ],
+                [
+                    {"type": "link", "text": "🆘 Техподдержка", "url": SUPPORT_LINK}
                 ]
+            ]
+        }
+    }
+
+def subscriptions_keyboard():
+    return {
+        "type": "inline_keyboard",
+        "payload": {
+            "buttons": [
+                [{"type": "callback", "text": "🧑‍🌾 Колхозник (30⚡) 99₽/мес", "payload": "sub_base"}],
+                [{"type": "callback", "text": "⚒️ Ударник (100⚡) 199₽/мес", "payload": "sub_start"}],
+                [{"type": "callback", "text": "🏭 Стахановец (350⚡) 449₽/мес", "payload": "sub_pro"}],
+                [{"type": "callback", "text": "🎖️ Партийный (700⚡) 849₽/мес", "payload": "sub_premium"}],
+                [{"type": "callback", "text": "👑 Генсек (1000⚡) 1099₽/мес", "payload": "sub_ultra"}],
+                [{"type": "callback", "text": "🔙 Назад", "payload": "back_to_main"}]
             ]
         }
     }
@@ -180,28 +189,27 @@ def handle_update(update):
             bot.send_message(user_id=user_id, text="Главное меню:", attachments=[main_menu_keyboard()])
 
         elif payload == 'subscriptions':
-            # Можно отправить информацию о подписках
-            text = (
-                "💎 **Подписки (скоро)**\n\n"
-                "С подпиской вы получаете доступ ко всем платным функциям!\n"
-                "Следите за обновлениями."
-            )
-            bot.send_message(user_id=user_id, text=text)
+            bot.send_message(user_id=user_id, text="💎Выберите подписку:", attachments=[subscriptions_keyboard()])
+            
 
-        elif payload.startswith('topup_'):
-            amount = int(payload.split('_')[1])
+        elif payload.startswith('sub_'):
+            sub_data = SUBSCRIPTIONS.get(payload)
+            if not sub_data:
+                bot.send_message(user_id=user_id, text="Неизвестная подписка.")
+                return
             try:
                 payment_data = yookassa.create_payment(
-                    amount=amount,
-                    description=f"Пополнение баланса на {amount} токенов",
-                    user_id=user_id
+                    amount=sub_data["price"],
+                    description=f"Подписка {sub_data['name']} на месяц",
+                    user_id=user_id,
+                    metadata={'type': 'subscription', 'sub_key': payload, 'tokens': sub_data["tokens"]}
                 )
                 bot.send_message(
                     user_id=user_id,
-                    text=f"💳 Для пополнения на {amount} токенов перейдите по ссылке:\n{payment_data['confirmation_url']}\n\nПосле оплаты баланс будет зачислен автоматически."
+                    text=f"💳 Для оформления подписки «{sub_data['name']}» перейдите по ссылке:\n{payment_data['confirmation_url']}\n\nПосле оплаты токены будут зачислены, а подписка активирована на месяц."
                 )
             except Exception as e:
-                logger.error(f"Payment creation error: {e}")
+                logger.error(f"Payment error: {e}")
                 bot.send_message(user_id=user_id, text="❌ Ошибка при создании платежа. Попробуйте позже.")
         else:
             bot.send_message(user_id=user_id, text="Неизвестная команда.")

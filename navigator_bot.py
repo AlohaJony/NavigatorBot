@@ -8,7 +8,7 @@ from config import NAVIGATOR_TOKEN, DOWNLOADER_BOT_LINK, PDF_BOT_LINK, AUDIO_BOT
 from max_client import MaxBotClient
 from user_manager import get_or_create_user, get_balance, add_tokens
 from payments import YooKassaClient
-
+from payments import bot_instance as payments_bot
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -24,6 +24,7 @@ if not NAVIGATOR_TOKEN:
     raise ValueError("No NAVIGATOR_TOKEN in .env")
 
 bot = MaxBotClient(NAVIGATOR_TOKEN)
+payments_bot = bot
 BOT_ID = None
 
 # Инициализация ЮKassa
@@ -34,6 +35,7 @@ class WebhookHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length)
+        logger.info(f"Webhook POST received: {post_data.decode('utf-8')}")
         try:
             data = json.loads(post_data)
             if yookassa.handle_notification(data):

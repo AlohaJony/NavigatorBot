@@ -19,7 +19,13 @@ class YooKassaClient:
         user_id - ID пользователя в MAX (будет передано в metadata)
         Возвращает словарь с confirmation_url и payment_id.
         """
+        logger.info(f"create_payment called with amount={amount}, user_id={user_id}, metadata={metadata}")
         idempotence_key = str(uuid.uuid4())
+        if metadata is None:
+            metadata = {}
+        # обязательно добавляем user_id и amount в metadata для идентификации при вебхуке
+        metadata['user_id'] = user_id
+        metadata['amount'] = amount
         payment = Payment.create({
             "amount": {
                 "value": f"{amount}.00",

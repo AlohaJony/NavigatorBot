@@ -238,6 +238,8 @@ def main():
             new_marker = updates_data.get('marker')
             if new_marker is not None:
                 marker = new_marker
+                logger.info(f"Marker updated to {marker}")
+            logger.info(f"Received {len(updates)} updates")
             for upd in updates:
                 try:
                     handle_update(upd)

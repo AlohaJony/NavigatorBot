@@ -11,7 +11,7 @@ class YooKassaClient:
         Configuration.configure(shop_id, secret_key)
         self.return_url = return_url
 
-    def create_payment(self, amount: int, description: str, user_id: int) -> dict:
+    def create_payment(self, amount: int, description: str, user_id: int, metadata: dict = None) -> dict:
         """
         Создаёт платёж в ЮKassa.
         amount - сумма в рублях (целое число)
@@ -26,26 +26,21 @@ class YooKassaClient:
         # обязательно добавляем user_id и amount в metadata для идентификации при вебхуке
         metadata['user_id'] = user_id
         metadata['amount'] = amount
-        payment = Payment.create({
-            "amount": {
-                "value": f"{amount}.00",
-                "currency": "RUB"
-            },
-            "confirmation": {
-                "type": "redirect",
-                "return_url": self.return_url
-            },
-            "capture": True,
-            "description": description,
-            "metadata": {
-                "user_id": user_id,
-                "amount": amount
+        try:
+            payment = Payment.create({
+                "amount": {"value": f"{amount}.00", "currency": "RUB"},
+                "confirmation": {"type": "redirect", "return_url": self.return_url},
+                "capture": True,
+                "description": description,
+                "metadata": metadata
+            }, idempotence_key)
+            return {
+                "confirmation_url": payment.confirmation.confirmation_url,
+                "payment_id": payment.id
             }
-        }, idempotence_key)
-        return {
-            "confirmation_url": payment.confirmation.confirmation_url,
-            "payment_id": payment.id
-        }
+        except Exception as e:
+            logger.error(f"Payment creation failed: {e}", exc_info=True)
+            raise
 
     def handle_notification(self, request_json: dict) -> bool:
         try:

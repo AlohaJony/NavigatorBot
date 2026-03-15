@@ -194,6 +194,12 @@ def handle_update(update):
             if not sub_data:
                 bot.send_message(user_id=user_id, text="Неизвестная подписка.")
                 return
+        elif payload.startswith('topup_'):
+            bot.send_message(
+                user_id=user_id,
+                text="❗️ Функция разового пополнения заменена на подписки. Пожалуйста, выберите подписку в меню «Подписки».",
+                attachments=[subscriptions_keyboard()]
+            )  
             try:
                 payment_data = yookassa.create_payment(
                     amount=sub_data["price"],

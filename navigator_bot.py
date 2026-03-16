@@ -120,6 +120,7 @@ def handle_update(update):
     update_type = update.get('update_type')
     logger.info(f"Update type: {update_type}")
 
+    # Игнорируем неизвестные типы (они уже есть в else)
     if update_type == 'message_created':
         msg = update.get('message')
         if not msg:
@@ -148,13 +149,7 @@ def handle_update(update):
                 f"Ваш баланс: {balance} токенов.\n\n"
                 f"Выберите нужного бота ниже:"
             )
-            # Прикрепляем картинку
-            #image_attachment = {
-            #    "type": "image",
-            #    "payload": {
-            #        "url": "https://i.ibb.co/your-image.jpg"
-            #    }
-            #}
+            # Отправляем приветствие с клавиатурой (без картинки для надёжности)
             bot.send_message(user_id=user_id, text=welcome, attachments=[main_menu_keyboard()])
         else:
             bot.send_message(user_id=user_id, text="Используйте кнопки меню или /start")
@@ -177,25 +172,38 @@ def handle_update(update):
         payload = callback.get('payload')
         logger.info(f"Callback payload: {payload}")
 
+        # --- Обработка различных callback'ов ---
         if payload == 'balance':
             balance = get_balance(user_id)
             bot.send_message(user_id=user_id, text=f"💰 Ваш баланс: {balance} токенов.")
 
-        elif payload == 'topup_menu':
-            bot.send_message(user_id=user_id, text="Выберите пакет токенов:", attachments=[topup_keyboard()])
+        elif payload == 'topup_menu':  # старые кнопки (если остались)
+            bot.send_message(
+                user_id=user_id,
+                text="💎 Теперь доступны только подписки. Выберите подходящий вариант:",
+                attachments=[subscriptions_keyboard()]
+            )
+
+        elif payload.startswith('topup_'):  # старые кнопки пополнения
+            bot.send_message(
+                user_id=user_id,
+                text="❗️ Функция разового пополнения заменена на подписки. Пожалуйста, выберите подписку в меню «Подписки».",
+                attachments=[subscriptions_keyboard()]
+            )
 
         elif payload == 'back_to_main':
             bot.send_message(user_id=user_id, text="Главное меню:", attachments=[main_menu_keyboard()])
 
         elif payload == 'subscriptions':
-            bot.send_message(user_id=user_id, text="💎Выберите подписку:", attachments=[subscriptions_keyboard()])
-            
+            bot.send_message(user_id=user_id, text="💎 Выберите подписку:", attachments=[subscriptions_keyboard()])
 
         elif payload.startswith('sub_'):
             sub_data = SUBSCRIPTIONS.get(payload)
             if not sub_data:
                 bot.send_message(user_id=user_id, text="Неизвестная подписка.")
                 return
+
+            # Отправляем тестовое сообщение (уже есть)
             bot.send_message(user_id=user_id, text="Пытаюсь создать платёж...")
             try:
                 logger.info(f"Creating payment for sub: {sub_data}")
@@ -205,7 +213,7 @@ def handle_update(update):
                     user_id=user_id,
                     metadata={'type': 'subscription', 'sub_key': payload, 'tokens': sub_data["tokens"]}
                 )
-                logger.info(f"Payment created: {payment_data}")
+                logger.info(f"Payment data received: {payment_data}")
                 if payment_data and 'confirmation_url' in payment_data:
                     bot.send_message(
                         user_id=user_id,
@@ -218,29 +226,7 @@ def handle_update(update):
             except Exception as e:
                 logger.error(f"Payment error: {e}", exc_info=True)
                 bot.send_message(user_id=user_id, text="❌ Ошибка при создании платежа. Попробуйте позже.")
-        elif payload.startswith('topup_'):
-            bot.send_message(
-                user_id=user_id,
-                text="❗️ Функция разового пополнения заменена на подписки. Пожалуйста, выберите подписку в меню «Подписки».",
-                attachments=[subscriptions_keyboard()]
-            )  
-            try:
-                payment_data = yookassa.create_payment(
-                    amount=sub_data["price"],
-                    description=f"Подписка {sub_data['name']} на месяц",
-                    user_id=user_id,
-                    metadata={'type': 'subscription', 'sub_key': payload, 'tokens': sub_data["tokens"]}
-                )
-                logger.info(f"Payment data: {payment_data}")
-                logger.info(f"Sending payment link to user {user_id}")
-                bot.send_message(
-                    user_id=user_id,
-                    text=f"💳 Для оформления подписки «{sub_data['name']}» перейдите по ссылке:\n{payment_data['confirmation_url']}\n\nПосле оплаты токены будут зачислены, а подписка активирована на месяц."
-                )
-                logger.info("Payment link sent successfully")
-            except Exception as e:
-                logger.error(f"Payment error: {e}")
-                bot.send_message(user_id=user_id, text="❌ Ошибка при создании платежа. Попробуйте позже.")
+
         else:
             bot.send_message(user_id=user_id, text="Неизвестная команда.")
     else:

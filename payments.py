@@ -38,7 +38,7 @@ class YooKassaClient:
                 "capture": True,
                 "description": description,
                 "metadata": metadata
-            }, idempotence_key, timeout=30)
+            }, idempotence_key)
             return {
                 "confirmation_url": payment.confirmation.confirmation_url,
                 "payment_id": payment.id

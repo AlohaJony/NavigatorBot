@@ -39,23 +39,16 @@ class MaxBotClient:
     def build_attachment(self, file_type: str, token: str) -> Dict:
         return {"type": file_type, "payload": {"token": token}}
 
-    def send_message(
-        self,
-        text: str,
-        user_id: Optional[int] = None,
-        chat_id: Optional[int] = None,
-        attachments: Optional[List[Dict]] = None,
-        format: Optional[str] = None,
-        disable_link_preview: bool = False,
-    ) -> Dict[str, Any]:
-        if not (user_id or chat_id):
-            raise ValueError("Either user_id or chat_id must be provided")
+    def send_message(self, user_id, text, attachments=None, format=None):
+        params = {"user_id": user_id, "disable_link_preview": "false"}
         payload = {"text": text, "attachments": attachments or []}
         if format:
             payload["format"] = format
-        params = {"disable_link_preview": str(disable_link_preview).lower()}
-        if user_id:
-            params["user_id"] = user_id
-        if chat_id:
-            params["chat_id"] = chat_id
-        return self._request("POST", "/messages", params=params, json=payload)
+        logger.info(f"Sending message to {user_id}: text={text}, attachments={attachments}")
+        try:
+            result = self._request("POST", "/messages", params=params, json=payload)
+            logger.info(f"Message sent, result: {result}")
+            return result
+        except Exception as e:
+            logger.error(f"Failed to send message: {e}", exc_info=True)
+            raise

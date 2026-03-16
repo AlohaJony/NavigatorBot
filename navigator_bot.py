@@ -198,6 +198,7 @@ def handle_update(update):
                 return
             try:
                 logger.info(f"Creating payment for sub: {sub_data}")
+                bot.send_message(user_id=user_id, text="Пытаюсь создать платёж...")
                 payment_data = yookassa.create_payment(
                     amount=sub_data["price"],
                     description=f"Подписка {sub_data['name']} на месяц",
@@ -211,6 +212,7 @@ def handle_update(update):
                 )
             except Exception as e:
                 logger.error(f"Payment error: {e}", exc_info=True)
+                logger.info(f"Sending payment link to user {user_id}")
                 bot.send_message(user_id=user_id, text="❌ Ошибка при создании платежа. Попробуйте позже.")
         elif payload.startswith('topup_'):
             bot.send_message(
@@ -225,10 +227,13 @@ def handle_update(update):
                     user_id=user_id,
                     metadata={'type': 'subscription', 'sub_key': payload, 'tokens': sub_data["tokens"]}
                 )
+                logger.info(f"Payment data: {payment_data}")
+                logger.info(f"Sending payment link to user {user_id}")
                 bot.send_message(
                     user_id=user_id,
                     text=f"💳 Для оформления подписки «{sub_data['name']}» перейдите по ссылке:\n{payment_data['confirmation_url']}\n\nПосле оплаты токены будут зачислены, а подписка активирована на месяц."
                 )
+                logger.info("Payment link sent successfully")
             except Exception as e:
                 logger.error(f"Payment error: {e}")
                 bot.send_message(user_id=user_id, text="❌ Ошибка при создании платежа. Попробуйте позже.")

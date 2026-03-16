@@ -15,7 +15,6 @@ class YooKassaClient:
         self.session = requests.Session()
         self.session.timeout = (10, 30)
         # Устанавливаем эту сессию глобально для библиотеки yookassa
-        Configuration.set_session(self.session)
 
     def create_payment(self, amount: int, description: str, user_id: int, metadata: dict = None) -> dict:
         idempotence_key = str(uuid.uuid4())

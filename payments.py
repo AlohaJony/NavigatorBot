@@ -1,5 +1,6 @@
 import uuid
 import logging
+import requests
 from yookassa import Configuration, Payment
 from yookassa.domain.notification import WebhookNotification
 from user_manager import add_tokens
@@ -27,18 +28,24 @@ class YooKassaClient:
         # обязательно добавляем user_id и amount в metadata для идентификации при вебхуке
         metadata['user_id'] = user_id
         metadata['amount'] = amount
+        session = requests.Session()
+        session.timeout = (10, 30)
         try:
+            logger.info(f"Calling Payment.create with idempotence_key={idempotence_key}")
             payment = Payment.create({
                 "amount": {"value": f"{amount}.00", "currency": "RUB"},
                 "confirmation": {"type": "redirect", "return_url": self.return_url},
                 "capture": True,
                 "description": description,
                 "metadata": metadata
-            }, idempotence_key)
+            }, idempotence_key, timeout=30)
             return {
                 "confirmation_url": payment.confirmation.confirmation_url,
                 "payment_id": payment.id
             }
+        except requests.exceptions.Timeout:
+            logger.error("Payment creation timeout")
+            raise Exception("Превышено время ожидания ответа от платёжной системы")
         except Exception as e:
             logger.error(f"Payment creation failed: {e}", exc_info=True)
             raise

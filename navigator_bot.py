@@ -196,9 +196,9 @@ def handle_update(update):
             if not sub_data:
                 bot.send_message(user_id=user_id, text="Неизвестная подписка.")
                 return
+            bot.send_message(user_id=user_id, text="Пытаюсь создать платёж...")
             try:
                 logger.info(f"Creating payment for sub: {sub_data}")
-                bot.send_message(user_id=user_id, text="Пытаюсь создать платёж...")
                 payment_data = yookassa.create_payment(
                     amount=sub_data["price"],
                     description=f"Подписка {sub_data['name']} на месяц",
@@ -206,13 +206,17 @@ def handle_update(update):
                     metadata={'type': 'subscription', 'sub_key': payload, 'tokens': sub_data["tokens"]}
                 )
                 logger.info(f"Payment created: {payment_data}")
-                bot.send_message(
-                    user_id=user_id,
-                    text=f"💳 Для оформления подписки «{sub_data['name']}» перейдите по ссылке:\n{payment_data['confirmation_url']}\n\nПосле оплаты токены будут зачислены, а подписка активирована на месяц."
-                )
+                if payment_data and 'confirmation_url' in payment_data:
+                    bot.send_message(
+                        user_id=user_id,
+                        text=f"💳 Для оформления подписки «{sub_data['name']}» перейдите по ссылке:\n{payment_data['confirmation_url']}\n\nПосле оплаты токены будут зачислены, а подписка активирована на месяц."
+                    )
+                    logger.info("Payment link sent successfully")
+                else:
+                    logger.error(f"Invalid payment data: {payment_data}")
+                    bot.send_message(user_id=user_id, text="❌ Ошибка при создании платежа: неверный ответ от платёжной системы.")
             except Exception as e:
                 logger.error(f"Payment error: {e}", exc_info=True)
-                logger.info(f"Sending payment link to user {user_id}")
                 bot.send_message(user_id=user_id, text="❌ Ошибка при создании платежа. Попробуйте позже.")
         elif payload.startswith('topup_'):
             bot.send_message(

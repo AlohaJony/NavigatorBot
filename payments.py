@@ -1,6 +1,5 @@
 import uuid
 import logging
-import requests
 from yookassa import Configuration, Payment
 from yookassa.domain.notification import WebhookNotification
 from user_manager import add_tokens
@@ -10,10 +9,6 @@ logger = logging.getLogger(__name__)
 class YooKassaClient:
     def __init__(self, shop_id, secret_key, return_url):
         Configuration.configure(shop_id, secret_key)
-        # Настраиваем HTTP-клиент с таймаутами
-        session = requests.Session()
-        session.timeout = (10, 30)  # connect timeout, read timeout
-        Configuration.set_http_client(session)
         self.return_url = return_url
 
     def create_payment(self, amount: int, description: str, user_id: int, metadata: dict = None) -> dict:
@@ -37,9 +32,6 @@ class YooKassaClient:
                 "confirmation_url": payment.confirmation.confirmation_url,
                 "payment_id": payment.id
             }
-        except requests.exceptions.Timeout:
-            logger.error("Payment creation timeout")
-            raise Exception("Превышено время ожидания ответа от платёжной системы")
         except Exception as e:
             logger.error(f"Payment creation failed: {e}", exc_info=True)
             raise
@@ -63,7 +55,6 @@ class YooKassaClient:
                     from user_manager import update_subscription_end
                     subscription_end = datetime.now() + timedelta(days=30)
                     update_subscription_end(int(user_id), subscription_end)
-                    # Здесь можно отправить уведомление пользователю (если есть доступ к bot)
                 else:
                     add_tokens(int(user_id), int(amount), f"Оплата ЮKassa (платёж {payment.id})")
                 return True

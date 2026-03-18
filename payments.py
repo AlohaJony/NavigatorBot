@@ -10,11 +10,11 @@ logger = logging.getLogger(__name__)
 class YooKassaClient:
     def __init__(self, shop_id, secret_key, return_url):
         Configuration.configure(shop_id, secret_key)
+        # Настраиваем HTTP-клиент с таймаутами
+        session = requests.Session()
+        session.timeout = (10, 30)  # connect timeout, read timeout
+        Configuration.set_http_client(session)
         self.return_url = return_url
-        # Создаём сессию с таймаутами (10 секунд на соединение, 30 на чтение)
-        self.session = requests.Session()
-        self.session.timeout = (10, 30)
-        # Устанавливаем эту сессию глобально для библиотеки yookassa
 
     def create_payment(self, amount: int, description: str, user_id: int, metadata: dict = None) -> dict:
         idempotence_key = str(uuid.uuid4())

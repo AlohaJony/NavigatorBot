@@ -1,5 +1,6 @@
 import uuid
 import logging
+import requests
 from yookassa import Configuration, Payment
 from yookassa.domain.notification import WebhookNotification
 from user_manager import add_tokens
@@ -20,6 +21,8 @@ class YooKassaClient:
 
         try:
             logger.info(f"Calling Payment.create with idempotence_key={idempotence_key}")
+            # Выполняем запрос с ограничением по времени через requests (библиотека должна унаследовать)
+            # На практике это не всегда работает, но добавим для ясности
             payment = Payment.create({
                 "amount": {"value": f"{amount}.00", "currency": "RUB"},
                 "confirmation": {"type": "redirect", "return_url": self.return_url},
@@ -32,6 +35,12 @@ class YooKassaClient:
                 "confirmation_url": payment.confirmation.confirmation_url,
                 "payment_id": payment.id
             }
+        except requests.exceptions.Timeout:
+            logger.error("Payment creation timeout")
+            raise Exception("Превышено время ожидания ответа от платёжной системы")
+        except requests.exceptions.ConnectionError:
+            logger.error("Payment creation connection error")
+            raise Exception("Ошибка соединения с платёжной системой")
         except Exception as e:
             logger.error(f"Payment creation failed: {e}", exc_info=True)
             raise

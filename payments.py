@@ -3,9 +3,13 @@ import logging
 import requests
 from yookassa import Configuration, Payment
 from yookassa.domain.notification import WebhookNotification
-from user_manager import add_tokens
+from user_manager import add_tokens, update_subscription_end, transaction_exists_by_payment
+from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
+
+# глобальная ссылка на бота (устанавливается из navigator_bot.py)
+bot_instance = None
 
 class YooKassaClient:
     def __init__(self, shop_id, secret_key, return_url):
@@ -21,8 +25,6 @@ class YooKassaClient:
 
         try:
             logger.info(f"Calling Payment.create with idempotence_key={idempotence_key}")
-            # Выполняем запрос с ограничением по времени через requests (библиотека должна унаследовать)
-            # На практике это не всегда работает, но добавим для ясности
             payment = Payment.create({
                 "amount": {"value": f"{amount}.00", "currency": "RUB"},
                 "confirmation": {"type": "redirect", "return_url": self.return_url},
@@ -46,26 +48,62 @@ class YooKassaClient:
             raise
 
     def handle_notification(self, request_json: dict) -> bool:
+        global bot_instance
         try:
             notification = WebhookNotification(request_json)
+            logger.info(f"Webhook received: event={notification.event}")
             if notification.event == 'payment.succeeded':
                 payment = notification.object
+                logger.info(f"Payment succeeded: id={payment.id}, metadata={payment.metadata}")
+
+                # Проверка в БД (дубли)
+                if transaction_exists_by_payment(payment.id):
+                    logger.warning(f"Duplicate payment {payment.id} in DB, skipping")
+                    return True
+
                 metadata = payment.metadata
                 user_id = metadata.get('user_id')
                 amount = metadata.get('amount')
                 if not user_id or not amount:
                     logger.error("Missing user_id or amount in metadata")
                     return False
+
                 if metadata.get('type') == 'subscription':
                     tokens = int(metadata.get('tokens', 0))
                     sub_key = metadata.get('sub_key')
-                    add_tokens(int(user_id), tokens, f"Подписка {sub_key}")
-                    from datetime import datetime, timedelta
-                    from user_manager import update_subscription_end
+                    # получаем название подписки (импортируем словарь из navigator_bot)
+                    from navigator_bot import SUBSCRIPTIONS
+                    sub_name = SUBSCRIPTIONS.get(sub_key, {}).get('name', 'подписке')
+
+                    # Начисляем токены с payment_id
+                    add_tokens(int(user_id), tokens, f"Подписка {sub_key} (payment {payment.id})", payment_id=payment.id)
+
+                    # Устанавливаем дату окончания подписки (30 дней)
                     subscription_end = datetime.now() + timedelta(days=30)
                     update_subscription_end(int(user_id), subscription_end)
+
+                    # Удаляем предыдущие сообщения и отправляем уведомление
+                    if bot_instance:
+                        mid_progress = metadata.get('mid_progress')
+                        mid_link = metadata.get('mid_link')
+                        if mid_progress:
+                            try:
+                                bot_instance.delete_message(message_id=mid_progress, user_id=user_id)
+                            except Exception as e:
+                                logger.error(f"Failed to delete progress message: {e}")
+                        if mid_link:
+                            try:
+                                bot_instance.delete_message(message_id=mid_link, user_id=user_id)
+                            except Exception as e:
+                                logger.error(f"Failed to delete link message: {e}")
+                        # Отправляем уведомление
+                        bot_instance.send_message(
+                            user_id=user_id,
+                            text=f"✅ Вы приобрели подписку «{sub_name}»! Баланс пополнен на {tokens} токенов."
+                        )
                 else:
-                    add_tokens(int(user_id), int(amount), f"Оплата ЮKassa (платёж {payment.id})")
+                    # Обычное пополнение (если будет)
+                    add_tokens(int(user_id), int(amount), f"Оплата ЮKassa (платёж {payment.id})", payment_id=payment.id)
                 return True
             return False
         except Exception as e:

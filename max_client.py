@@ -52,3 +52,12 @@ class MaxBotClient:
         except Exception as e:
             logger.error(f"Failed to send message: {e}", exc_info=True)
             raise
+        
+    def edit_message(self, message_id: str, user_id: int, text: str, attachments=None):
+        payload = {"text": text, "attachments": attachments or []}
+        params = {"message_id": message_id, "user_id": user_id}
+        return self._request("PUT", "/messages", params=params, json=payload)
+
+    def delete_message(self, message_id: str, user_id: int):
+        params = {"message_id": message_id, "user_id": user_id}
+        return self._request("DELETE", "/messages", params=params)

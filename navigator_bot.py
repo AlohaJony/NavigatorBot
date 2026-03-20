@@ -207,6 +207,9 @@ def handle_update(update):
             # Отправляем тестовое сообщение (уже есть)
             msg_progress = bot.send_message(user_id=user_id, text="Cоздаю платёж...")
             mid_progress = msg_progress.get('message', {}).get('body', {}).get('mid')
+            # Отправляем временное сообщение (потом его заменим на ссылку)
+            msg_temp = bot.send_message(user_id=user_id, text="Создаю ссылку на оплату...")
+            mid_temp = msg_temp.get('message', {}).get('body', {}).get('mid')
             try:
                 logger.info(f"Creating payment for sub: {sub_data}")
                 metadata = {
@@ -214,7 +217,7 @@ def handle_update(update):
                     'sub_key': payload,
                     'tokens': sub_data["tokens"],
                     'mid_progress': mid_progress,
-                    'mid_link': mid_link
+                    'mid_link': mid_temp
                 }
                 payment_data = yookassa.create_payment(
                     amount=sub_data["price"],

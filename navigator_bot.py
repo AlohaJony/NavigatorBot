@@ -243,7 +243,7 @@ def handle_update(update):
             bot.send_message(user_id=user_id, text="Неизвестная команда.")
     else:
         logger.warning(f"Unknown update type: {update_type}")
-
+payments.main_menu_keyboard = main_menu_keyboard
 def main():
     global BOT_ID
     logger.info("Starting Navigator Bot...")

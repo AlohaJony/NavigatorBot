@@ -108,6 +108,13 @@ class YooKassaClient:
                             user_id=user_id,
                             text=f"✅ Вы приобрели подписку «{sub_name}»! Баланс пополнен на {tokens} токенов."
                         )
+                        # Отправляем сообщение с предложением выбрать бота
+                        if hasattr(payments, 'main_menu_keyboard'):
+                            bot_instance.send_message(
+                                user_id=user_id,
+                                text="Теперь выберите нужного бота:",
+                                attachments=[payments.main_menu_keyboard()]
+                            )
                 else:
                     # Обычное пополнение (если будет)
                     add_tokens(int(user_id), int(amount), f"Оплата ЮKassa (платёж {payment.id})", payment_id=payment.id)

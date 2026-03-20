@@ -8,10 +8,10 @@ from config import NAVIGATOR_TOKEN, DOWNLOADER_BOT_LINK, PDF_BOT_LINK, AUDIO_BOT
 from max_client import MaxBotClient
 from user_manager import get_or_create_user, get_balance, add_tokens
 from payments import YooKassaClient
-from payments import bot_instance as payments_bot
+import payments
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-payments_bot = bot
 
 SUBSCRIPTIONS = {
     "sub_base": {"tokens": 30, "price": 99, "name": "Колхозник"},

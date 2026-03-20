@@ -91,12 +91,16 @@ class YooKassaClient:
                     if bot_instance:
                         if mid_progress:
                             try:
-                                bot_instance.delete_message(message_id=mid_progress, user_id=user_id)
+                                logger.info(f"Attempting to delete progress message: {mid_progress}")
+                                result = bot_instance.delete_message(message_id=mid_progress, user_id=user_id)
+                                logger.info(f"Deleted progress message: {result}")
                             except Exception as e:
                                 logger.error(f"Failed to delete progress message: {e}")
                         if mid_link:
                             try:
-                                bot_instance.delete_message(message_id=mid_link, user_id=user_id)
+                                logger.info(f"Attempting to delete link message: {mid_link}")
+                                result = bot_instance.delete_message(message_id=mid_link, user_id=user_id)
+                                logger.info(f"Deleted link message: {result}")
                             except Exception as e:
                                 logger.error(f"Failed to delete link message: {e}")
                         # Отправляем уведомление

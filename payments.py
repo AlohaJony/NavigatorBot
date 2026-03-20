@@ -87,6 +87,7 @@ class YooKassaClient:
 
                     # Удаляем предыдущие сообщения и отправляем уведомление
                     mid_progress = metadata.get('mid_progress')
+                    mid_link = metadata.get('mid_link')
                     if bot_instance:
                         if mid_progress:
                             try:

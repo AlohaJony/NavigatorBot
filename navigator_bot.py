@@ -213,7 +213,8 @@ def handle_update(update):
                     'type': 'subscription',
                     'sub_key': payload,
                     'tokens': sub_data["tokens"],
-                    'mid_progress': mid_progress
+                    'mid_progress': mid_progress,
+                    'mid_link': mid_link
                 }
                 payment_data = yookassa.create_payment(
                     amount=sub_data["price"],

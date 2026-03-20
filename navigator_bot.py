@@ -25,7 +25,7 @@ if not NAVIGATOR_TOKEN:
     raise ValueError("No NAVIGATOR_TOKEN in .env")
 
 bot = MaxBotClient(NAVIGATOR_TOKEN)
-payments_bot = bot
+payments.bot_instance = bot
 BOT_ID = None
 
 # Инициализация ЮKassa

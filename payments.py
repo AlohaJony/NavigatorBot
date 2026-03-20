@@ -62,6 +62,9 @@ class YooKassaClient:
                     return True
 
                 metadata = payment.metadata
+                logger.info(f"Metadata in notification: {metadata}")
+                if 'mid_progress' in metadata:
+                    logger.info(f"mid_progress = {metadata['mid_progress']}")
                 user_id = metadata.get('user_id')
                 amount = metadata.get('amount')
                 if not user_id or not amount:
@@ -83,9 +86,8 @@ class YooKassaClient:
                     update_subscription_end(int(user_id), subscription_end)
 
                     # Удаляем предыдущие сообщения и отправляем уведомление
+                    mid_progress = metadata.get('mid_progress')
                     if bot_instance:
-                        mid_progress = metadata.get('mid_progress')
-                        mid_link = metadata.get('mid_link')
                         if mid_progress:
                             try:
                                 bot_instance.delete_message(message_id=mid_progress, user_id=user_id)

@@ -205,14 +205,21 @@ def handle_update(update):
                 return
 
             # Отправляем тестовое сообщение (уже есть)
-            bot.send_message(user_id=user_id, text="Cоздаю платёж...")
+            msg_progress = bot.send_message(user_id=user_id, text="Cоздаю платёж...")
+            mid_progress = msg_progress.get('message', {}).get('body', {}).get('mid')
             try:
                 logger.info(f"Creating payment for sub: {sub_data}")
+                metadata = {
+                    'type': 'subscription',
+                    'sub_key': payload,
+                    'tokens': sub_data["tokens"],
+                    'mid_progress': mid_progress
+                }
                 payment_data = yookassa.create_payment(
                     amount=sub_data["price"],
                     description=f"Подписка {sub_data['name']} на месяц",
                     user_id=user_id,
-                    metadata={'type': 'subscription', 'sub_key': payload, 'tokens': sub_data["tokens"]}
+                    metadata=metadata
                 )
                 logger.info(f"Payment data received: {payment_data}")
                 if payment_data and 'confirmation_url' in payment_data:

@@ -241,6 +241,17 @@ def handle_update(update):
 
         else:
             bot.send_message(user_id=user_id, text="Неизвестная команда.")
+
+    elif update_type == 'bot_started':
+        chat_id = update.get('chat_id')
+        if chat_id:
+            balance = get_balance(chat_id)  # user_id = chat_id
+            welcome = (
+                f"👋 Добро пожаловать в семейство ботов СОЮЗ!\n\n"
+                f"Ваш баланс: {balance} токенов.\n\n"
+                f"Выберите нужного бота ниже:"
+            )
+            bot.send_message(user_id=chat_id, text=welcome, attachments=[main_menu_keyboard()])
     else:
         logger.warning(f"Unknown update type: {update_type}")
 payments.main_menu_keyboard = main_menu_keyboard
